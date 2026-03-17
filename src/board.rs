@@ -4,6 +4,13 @@ pub struct Board {
 }
 
 impl Board {
+    pub const MOVES: [(isize, isize); 4] = [
+        (-2, 0), // Up
+        (2, 0),  // Down
+        (0, -2), // Left
+        (0, 2),  // Right
+    ];
+
     pub fn size(&self) -> usize {
         self.size
     }
@@ -46,17 +53,14 @@ impl Board {
             return false;
         }
         
-        if r >= 2 && self.grid[r-1][d] == Some(true) && self.grid[r-2][d] == Some(false) {
-            return true;
-        }
-        if r <= self.size - 3 && self.grid[r+1][d] == Some(true) && self.grid[r+2][d] == Some(false) {
-            return true;
-        }
-        if d >= 2 && self.grid[r][d-1] == Some(true) && self.grid[r][d-2] == Some(false) {
-            return true;
-        }
-        if d <= self.size - 3 && self.grid[r][d+1] == Some(true) && self.grid[r][d+2] == Some(false) {
-            return true;
+        for (dr, dd) in Self::MOVES.iter() {
+            let r_to = r as isize + dr;
+            let d_to = d as isize + dd;
+            
+            if self.possible_to_move_peg_to(r, d, r_to as usize, d_to as usize) {
+                return true;
+            }
+            
         }
         false
     }
@@ -104,6 +108,27 @@ impl Board {
 
     pub fn classic_win(&self) -> bool {
         self.pegs_remaining() == 1 && self.grid[3][3] == Some(true)
+    }
+
+    pub fn undo_move(&mut self, r_from: usize, d_from: usize, r_to: usize, d_to: usize) {
+        self.grid[r_from][d_from] = Some(true);
+        self.grid[r_to][d_to] = Some(false);
+        if r_to == r_from {
+            self.grid[r_from][(d_from + d_to) / 2] = Some(true);
+        } else {
+            self.grid[(r_from + r_to) / 2][d_from] = Some(true);
+        }
+    }
+
+    pub fn exists_movable_peg(&mut self) -> bool {
+        for i in 0..self.size{
+            for j in 0..self.size{
+                if self.possible_to_move_peg(i,j){
+                    return true;
+                }
+            }
+        }
+        false
     }
 
 
